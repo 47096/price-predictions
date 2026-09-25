@@ -10,8 +10,8 @@ library(DALEX)
 library(Metrics)
 
 # read data from github
-train <- read.csv('https://raw.githubusercontent.com/wsamuelw/kaggle-predict-house-prices/main/data/train.csv', stringsAsFactors = T); nrow(train) # 1460
-test <- read.csv('https://raw.githubusercontent.com/wsamuelw/kaggle-predict-house-prices/main/data/test.csv', stringsAsFactors = T); nrow(test) # 1459
+train <- read.csv('data/train.csv', stringsAsFactors = T); nrow(train) # 1460
+test <- read.csv('data/test.csv', stringsAsFactors = T); nrow(test) # 1459
 
 # create SalePrice in the test set
 test$SalePrice <- NA

@@ -1,100 +1,109 @@
-# Predicting House Prices
+# What drives home prices?
 
-Predicting sale prices for the Kaggle House Prices competition using XGBoost — with 80 features, model explainability via modelStudio, and a competition submission.
+**A valuation insight problem, solved with property data.**
 
-## Problem
+Buyers, sellers, and investors argue about value from gut feel. I turn **property features into a price estimate and a reason list** — what actually moves the number.
 
-The Kaggle House Prices challenge: predict the sale price of 1,459 homes in Ames, Iowa based on 79 features (lot size, neighbourhood, year built, pool, garage, etc.). The goal is minimising RMSLE (root mean squared log error) — getting the price right in percentage terms, not just dollar terms.
+---
 
-## Approach
+## The stake
 
-1. **Combine** train (1,460) and test (1,459) sets for consistent preprocessing
-2. **Clean** — remove features with excessive missing data (PoolQC, MiscFeature, Alley, Fence, FireplaceQu)
-3. **Split** — 80/20 with stratification on SalePrice
-4. **Train** — XGBoost via tidymodels with default parameters
-5. **Evaluate** — R², MAE, RMSE, RMSLE
-6. **Explain** — modelStudio interactive dashboard on 5 sample predictions
-7. **Submit** — generate Kaggle submission CSV
+Misprice a home and you leave money on the table or sit on the market. Appraisals are slow. Spreadsheets ignore non-linear effects (quality × location × timing). You need **both** a number and **why**.
 
-## Results
+## The story
+
+1,459 homes in Ames, Iowa with **79 features** — lot, neighbourhood, build year, pool, garage, finishes.
+
+I built a full pipeline toward a competition-grade score **and** an explainability pass:
+
+1. **Clean** — drop hopelessly sparse columns instead of fake precision  
+2. **Train** XGBoost on rich mixed-type features  
+3. **Score** in percentage terms (**RMSLE**), not just raw dollars  
+4. **Explain** — which features drove a given estimate (modelStudio)  
+5. **Ship** a submission file — the workflow is production-shaped  
+
+**Outcome on this build:**
+- **R² ≈ 0.87** — most of price variance explained on holdout  
+- **MAE ≈ $18.5K** on typical Ames prices  
+- **RMSLE ≈ 0.15** — errors treated fairly for under/over estimates  
+- Sample predictions you can show next to actuals  
+
+> **The commercial idea:** price conversations start with **evidence + drivers**, not vibes.
+
+---
+
+## What that looks like in your world
+
+| You have | I turn it into |
+|----------|----------------|
+| Listing / sale tables | **Estimated price** + **top drivers** |
+| “Comparable sales” debates | Model view of **what pays** |
+| Valuation ops | Repeatable scoring, not hero spreadsheets |
+| Investor screening | Rank / filter on expected value |
+
+**Typical engagement:** define the price job (list price, AVM, offer range) → train on your market → score + feature story for the desk.
+
+**[Talk to me about price modelling →](https://datafying.co/#contactus)** · [datafying](https://datafying.co/)
+
+---
+
+## Why property & analytics leaders bring me in
+
+- Starts from **value and error cost**, not Kaggle leaderboard  
+- Keeps **explainability** next to accuracy (modelStudio)  
+- Metric choice (**RMSLE**) matches how people feel about price miss  
+- Honest: Ames ≠ your market — retrain locally  
+
+---
+
+## Proof of craft *(technical)*
+
+### Job
+Predict `SalePrice` from 79 property features (mixed types).
+
+### Pipeline
+Combine train/test for consistent prep → drop ultra-sparse columns (`PoolQC`, `MiscFeature`, `Alley`, `Fence`, `FireplaceQu`) → 80/20 split → **XGBoost (tidymodels)** → metrics → **DALEX / modelStudio** on sample rows → CSV export.
+
+### Results
 
 | Metric | Score |
 |--------|-------|
-| R² | 0.865 |
-| MAE | $18,494 |
+| R² | **0.865** |
+| MAE | **$18,494** |
 | RMSE | $26,430 |
-| RMSLE | 0.151 |
+| RMSLE | **0.151** |
 
-The model explains 86.5% of price variance. On average, predictions are within ~$18.5K of actual sale prices — strong for a default-parameter model on 80 features.
+### Feature groups
+Location · size · quality · age · rooms · basement · garage · outdoor · sale terms.
 
-### Sample Predictions
+### Limits (honesty)
+- **Ames, Iowa** — patterns may not transfer to Melbourne/Sydney  
+- Defaults used — tuning would move the needle  
+- Sparse amenity features removed rather than imputed  
+- Use as **decision support**, not a formal valuation  
 
-| Id | Predicted | Actual | Error |
-|----|-----------|--------|-------|
-| 641 | $276,033 | $274,000 | +$2,033 |
-| 1388 | $173,678 | $136,000 | +$37,678 |
-| 1434 | $177,981 | $186,500 | -$8,519 |
+---
 
-## Feature Groups
-
-The 79 features span every aspect of a property:
-
-| Category | Examples |
-|----------|---------|
-| Location | Neighbourhood, zoning, street type |
-| Size | Lot area, living area, lot frontage |
-| Quality | Overall quality, exterior quality, kitchen quality |
-| Structure | Year built, year remodelled, building type, house style |
-| Rooms | Bedrooms, bathrooms, kitchens, total rooms |
-| Basement | Total basement SF, basement quality, basement finish |
-| Garage | Garage cars, garage area, garage year built |
-| Outdoor | Wood deck, porch, pool area, fence |
-| Sale | Sale type, sale condition, month sold |
-
-## Setup
+## Reproduce
 
 ```bash
-git clone https://github.com/wsamuelw/kaggle-predict-house-prices.git
-cd kaggle-predict-house-prices
+git clone https://github.com/47096/price-predictions.git
+cd price-predictions
 ```
 
 ```r
-install.packages(c("tidyverse", "tidymodels", "corrplot", "modelStudio", "DALEX", "Metrics", "DataExplorer"))
-source("code/code.R")
+source("setup.R")
+source("analysis.R")
 ```
 
-## Data
+**Data:** `data/train.csv` · `data/test.csv` · `data_description.txt` (Kaggle House Prices, vendored)
 
-From the [Kaggle House Prices competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data). Included in `data/`:
+**Stack:** `tidyverse` · `tidymodels` · `xgboost` · `DALEX` · `modelStudio` · `Metrics`
 
-| File | Rows | Purpose |
-|------|------|---------|
-| `train.csv` | 1,460 | Training data with SalePrice |
-| `test.csv` | 1,459 | Unseen test data for Kaggle submission |
+---
 
-`data_description.txt` contains detailed descriptions of all 79 features.
+## Next step
 
-## Key Decisions
+If pricing still runs on instinct — that is the engagement I run.
 
-- **Removed 5 features** with excessive missing values (PoolQC, MiscFeature, Alley, Fence, FireplaceQu) rather than imputing — too sparse to be useful
-- **XGBoost over linear models** — 80 features with many categoricals and non-linear relationships; tree-based handles this naturally
-- **Default parameters** — focused on establishing a baseline before investing in tuning
-- **RMSLE as primary metric** — penalises underestimation more than overestimation, which is appropriate for house prices
-
-## Tech Stack
-
-- **tidymodels** — unified modelling framework
-- **XGBoost** — gradient boosting engine
-- **modelStudio / DALEX** — interactive model explainability
-- **DataExplorer** — missing data visualisation
-- **Metrics** — RMSLE calculation
-
-## References
-
-- [Kaggle House Prices competition](https://www.kaggle.com/c/house-prices-advanced-regression-techniques)
-- [modelStudio documentation](https://modelstudio.drwhy.ai/)
-- [Ames Housing data description](https://www.kaggle.com/c/house-prices-advanced-regression-techniques/data)
-
-## License
-
-MIT
+**[Book a conversation →](https://datafying.co/#contactus)** · Property & customer analytics · [datafying](https://datafying.co/)
